@@ -20,7 +20,6 @@ from opendbc.car.car_helpers import get_car, interfaces
 from opendbc.car.interfaces import CarInterfaceBase, RadarInterfaceBase
 from openpilot.selfdrive.pandad import can_capnp_to_list, can_list_to_can_capnp
 from openpilot.selfdrive.car.cruise import VCruiseHelper
-from openpilot.selfdrive.car.car_specific import MockCarState
 
 REPLAY = "REPLAY" in os.environ
 
@@ -35,7 +34,7 @@ def obd_callback(params: Params) -> ObdCallback:
     if params.get_bool("ObdMultiplexingEnabled") != obd_multiplexing:
       cloudlog.warning(f"Setting OBD multiplexing to {obd_multiplexing}")
       params.remove("ObdMultiplexingChanged")
-      params.put_bool("ObdMultiplexingEnabled", obd_multiplexing)
+      params.put_bool("ObdMultiplexingEnabled", obd_multiplexing, block=True)
       params.get_bool("ObdMultiplexingChanged", block=True)
       cloudlog.warning("OBD multiplexing set successfully")
   return set_obd_multiplexing
@@ -92,7 +91,6 @@ class Car:
           break
 
       alpha_long_allowed = self.params.get_bool("AlphaLongitudinalEnabled")
-      num_pandas = len(messaging.recv_one_retry(self.sm.sock['pandaStates']).pandaStates)
 
       cached_params = None
       cached_params_raw = self.params.get("CarParamsCache")
@@ -100,12 +98,12 @@ class Car:
         with car.CarParams.from_bytes(cached_params_raw) as _cached_params:
           cached_params = _cached_params
 
-      self.CI = get_car(*self.can_callbacks, obd_callback(self.params), alpha_long_allowed, is_release, num_pandas, cached_params)
+      self.CI = get_car(*self.can_callbacks, obd_callback(self.params), alpha_long_allowed, is_release, cached_params)
       self.RI = interfaces[self.CI.CP.carFingerprint].RadarInterface(self.CI.CP)
       self.CP = self.CI.CP
 
       # continue onto next fingerprinting step in pandad
-      self.params.put_bool("FirmwareQueryDone", True)
+      self.params.put_bool("FirmwareQueryDone", True, block=True)
     else:
       self.CI, self.CP = CI, CI.CP
       self.RI = RI
@@ -119,13 +117,13 @@ class Car:
       safety_config.safetyModel = structs.CarParams.SafetyModel.noOutput
       self.CP.safetyConfigs = [safety_config]
 
-    if self.CP.secOcRequired and not is_release:
+    if self.CP.secOcRequired:
       # Copy user key if available
       try:
         with open("/cache/params/SecOCKey") as f:
           user_key = f.readline().strip()
           if len(user_key) == 32:
-            self.params.put("SecOCKey", user_key)
+            self.params.put("SecOCKey", user_key, block=True)
       except Exception:
         pass
 
@@ -143,15 +141,14 @@ class Car:
     # Write previous route's CarParams
     prev_cp = self.params.get("CarParamsPersistent")
     if prev_cp is not None:
-      self.params.put("CarParamsPrevRoute", prev_cp)
+      self.params.put("CarParamsPrevRoute", prev_cp, block=True)
 
     # Write CarParams for controls and radard
     cp_bytes = self.CP.to_bytes()
-    self.params.put("CarParams", cp_bytes)
-    self.params.put_nonblocking("CarParamsCache", cp_bytes)
-    self.params.put_nonblocking("CarParamsPersistent", cp_bytes)
+    self.params.put("CarParams", cp_bytes, block=True)
+    self.params.put("CarParamsCache", cp_bytes)
+    self.params.put("CarParamsPersistent", cp_bytes)
 
-    self.mock_carstate = MockCarState()
     self.v_cruise_helper = VCruiseHelper(self.CP)
 
     self.is_metric = self.params.get_bool("IsMetric")
@@ -170,8 +167,6 @@ class Car:
 
     # Update carState from CAN
     CS = self.CI.update(can_list)
-    if self.CP.brand == 'mock':
-      CS = self.mock_carstate.update(CS)
 
     # Update radar tracks from CAN
     RD: structs.RadarDataT | None = self.RI.update(can_list)
@@ -186,15 +181,6 @@ class Car:
 
     if can_rcv_valid and REPLAY:
       self.can_log_mono_time = messaging.log_from_bytes(can_strs[0]).logMonoTime
-
-    # self.v_cruise_helper.update_v_cruise(CS, self.sm['carControl'].enabled, self.is_metric)
-    # if self.sm['carControl'].enabled and not self.CC_prev.enabled:
-    #   # Use CarState w/ buttons from the step selfdrived enables on
-    #   self.v_cruise_helper.initialize_v_cruise(self.CS_prev, self.experimental_mode)
-    #
-    # # TODO: mirror the carState.cruiseState struct?
-    # CS.vCruise = float(self.v_cruise_helper.v_cruise_kph)
-    # CS.vCruiseCluster = float(self.v_cruise_helper.v_cruise_cluster_kph)
 
     self.speed_controller.update_v_cruise(CS, self.sm, self.sm['carControl'].enabled)
     CS.vCruise = self.speed_controller.cruise_speed_kph
@@ -240,7 +226,7 @@ class Car:
       # TODO: this can make us miss at least a few cycles when doing an ECU knockout
       self.CI.init(self.CP, *self.can_callbacks)
       # signal pandad to switch to car safety mode
-      self.params.put_bool_nonblocking("ControlsReady", True)
+      self.params.put_bool("ControlsReady", True)
 
     if self.sm.all_alive(['carControl']):
       # send car controls over can
