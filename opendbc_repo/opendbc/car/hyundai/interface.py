@@ -121,7 +121,10 @@ class CarInterface(CarInterfaceBase):
     else:
       ret.enableBsm = 0x58b in fingerprint[0]
 
-    ret.sccBus = 2 if (candidate in CAMERA_SCC_CAR or Params().get_bool('SccOnBus2')) else 0
+    if ret.flags & HyundaiFlags.CANFD:
+      ret.sccBus = 2 if ((ret.flags & HyundaiFlags.CANFD_CAMERA_SCC) or (0x1a0 in fingerprint.get(CAN.CAM, {})) or Params().get_bool('SccOnBus2')) else 0
+    else:
+      ret.sccBus = 2 if (candidate in CAMERA_SCC_CAR or Params().get_bool('SccOnBus2')) else 0
 
     # *** panda safety config ***
     if ret.flags & HyundaiFlags.CANFD:
