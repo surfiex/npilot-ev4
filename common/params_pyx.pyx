@@ -47,6 +47,7 @@ cdef extern from "common/params.h":
 
 PYTHON_2_CPP = {
   (str, STRING): lambda v: v,
+  (bytes, STRING): lambda v: v.decode("utf-8"),
   (builtins.bool, BOOL): lambda v: "1" if v else "0",
   (int, INT): str,
   (float, FLOAT): str,
