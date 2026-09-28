@@ -2109,7 +2109,7 @@ struct DriverMonitoringState @0xb83cda094a1da284 {
   isRHD @4 :Bool;
   uncertainCount @19 :UInt32;
 
-  alertLevel @23 :AlertLevel;
+  alertLevel @22 :AlertLevel;
   enum AlertLevel {
     none @0;
     one @1;
