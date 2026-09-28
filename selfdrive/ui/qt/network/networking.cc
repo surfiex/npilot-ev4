@@ -411,5 +411,3 @@ void WifiItem::setItem(const Network &n, const QPixmap &status_icon, bool show_f
   iconLabel->setPixmap(status_icon);
   strengthLabel->setPixmap(strength_icon);
 }
-
-#include "moc_networking.cc"
