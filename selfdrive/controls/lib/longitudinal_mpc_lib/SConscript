@@ -64,9 +64,11 @@ lenv = env.Clone()
 acados_rel_path = Dir(gen).rel_path(Dir(f"#third_party/acados/{arch}/lib"))
 lenv["RPATH"] += [lenv.Literal(f'\\$$ORIGIN/{acados_rel_path}')]
 lenv.Clean(generated_files, Dir(gen))
+import sys
+acados_pythonpath = f"{Dir('#').abspath}:{Dir('#third_party').abspath}:{Dir('#third_party/acados').abspath}"
 generated_long = lenv.Command(generated_files,
                               source_list,
-                              f"cd {Dir('.').abspath} && python3 long_mpc.py")
+                              f"cd {Dir('.').abspath} && PYTHONPATH={acados_pythonpath} {sys.executable} long_mpc.py")
 lenv.Depends(generated_long, [msgq_python, common_python, pandad_python])
 
 lenv["CFLAGS"].append("-DACADOS_WITH_QPOASES")

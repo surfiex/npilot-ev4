@@ -8,7 +8,18 @@ from casadi import SX, vertcat, sin, cos
 from openpilot.selfdrive.modeld.constants import ModelConstants
 
 if __name__ == '__main__':  # generating code
-  from acados.acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
+  import sys
+  _BASEDIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../.."))
+  for _p in [_BASEDIR, os.path.join(_BASEDIR, "third_party"), os.path.join(_BASEDIR, "third_party", "acados")]:
+    if _p not in sys.path:
+      sys.path.insert(0, _p)
+  try:
+    from acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
+  except ImportError:
+    try:
+      from openpilot.third_party.acados.acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
+    except ImportError:
+      from acados.acados_template import AcadosModel, AcadosOcp, AcadosOcpSolver
 else:
   from openpilot.selfdrive.controls.lib.lateral_mpc_lib.c_generated_code.acados_ocp_solver_pyx import AcadosOcpSolverCython
 
