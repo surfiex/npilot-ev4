@@ -2090,7 +2090,7 @@ struct DriverStateV2 {
   }
 }
 
-struct DriverMonitoringStateDEPRECATED @0xb83cda094a1da284 {
+struct DriverMonitoringState @0xb83cda094a1da284 {
   events @18 :List(OnroadEvent);
   faceDetected @1 :Bool;
   isDistracted @2 :Bool;
@@ -2109,6 +2109,14 @@ struct DriverMonitoringStateDEPRECATED @0xb83cda094a1da284 {
   isRHD @4 :Bool;
   uncertainCount @19 :UInt32;
 
+  alertLevel @23 :AlertLevel;
+  enum AlertLevel {
+    none @0;
+    one @1;
+    two @2;
+    three @3;
+  }
+
   deprecated :group {
     phoneProbOffset @20 :Float32;
     phoneProbValidCount @21 :UInt32;
@@ -2118,7 +2126,7 @@ struct DriverMonitoringStateDEPRECATED @0xb83cda094a1da284 {
   }
 }
 
-struct DriverMonitoringState {
+struct DriverMonitoringStateV2 {
   lockout @0 :Bool;
   alertCountLockoutPercent @1 :Int8;
   alertTimeLockoutPercent @2 :Int8;
@@ -2312,8 +2320,9 @@ struct Sentinel {
 }
 
 struct UIDebug {
-  cpuTimeMillis @0 :Float32;
-  frameTimeMillis @1 :Float32;
+  drawTimeMillis @0 :Float32;
+  cpuTimeMillis @1 :Float32;
+  frameTimeMillis @2 :Float32;
 }
 
 struct ManagerState {
@@ -2492,7 +2501,8 @@ struct Event {
     thumbnail @66: Thumbnail;
     onroadEvents @134: List(OnroadEvent);
     carParams @69: Car.CarParams;
-    driverMonitoringState @151 :DriverMonitoringState;
+    driverMonitoringState @71 :DriverMonitoringState;
+    driverMonitoringStateV2 @151 :DriverMonitoringStateV2;
     livePose @129 :LivePose;
     modelV2 @75 :ModelDataV2;
     drivingModelData @128 :DrivingModelData;
@@ -2633,7 +2643,6 @@ struct Event {
     gyroscope2DEPRECATED @100 :SensorEventData;
     accelerometer2DEPRECATED @101 :SensorEventData;
     temperatureSensor2DEPRECATED @123 :SensorEventData;
-    driverMonitoringStateDEPRECATED @71 :DriverMonitoringStateDEPRECATED;
     gpsNMEADEPRECATED @3 :GPSNMEAData;
     uploaderStateDEPRECATED @79 :UploaderState;
     navInstructionDEPRECATED @82 :NavInstruction;
