@@ -3,6 +3,7 @@ import subprocess
 import sys
 import sysconfig
 import platform
+import importlib
 import numpy as np
 
 import SCons.Errors
@@ -133,6 +134,24 @@ else:
       "/usr/lib",
       "/usr/local/lib",
     ]
+
+# Discover comma dependencies from Python environment (AGNOS 11/12 wheels)
+for pkg_name in ['acados', 'bzip2', 'capnproto', 'eigen', 'ffmpeg', 'json11', 'libjpeg', 'libyuv', 'ncurses', 'zeromq', 'zstd', 'catch2']:
+  try:
+    pkg = importlib.import_module(pkg_name)
+    if hasattr(pkg, 'INCLUDE_DIR') and pkg.INCLUDE_DIR not in cpppath:
+      cpppath.append(pkg.INCLUDE_DIR)
+    if hasattr(pkg, 'LIB_DIR'):
+      if pkg.LIB_DIR not in libpath:
+        libpath.append(pkg.LIB_DIR)
+      if pkg.LIB_DIR not in rpath:
+        rpath.append(pkg.LIB_DIR)
+  except Exception:
+    pass
+
+for p in ["/usr/local/include", "/usr/include"]:
+  if p not in cpppath:
+    cpppath.append(p)
 
 if GetOption('asan'):
   ccflags = ["-fsanitize=address", "-fno-omit-frame-pointer"]
