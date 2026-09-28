@@ -538,6 +538,7 @@ struct PandaState @0xa7649e2575e4591e {
   heartbeatLost @22 :Bool;
   interruptLoad @25 :Float32;
   fanPower @28 :UInt8;
+  fanStallCount @34 :UInt8;
 
   spiErrorCount @33 :UInt16;
 
@@ -673,7 +674,6 @@ struct PandaState @0xa7649e2575e4591e {
     usbPowerMode @12 :Deprecated.UsbPowerModeDEPRECATED;
     safetyParam @20 :Int16;
     safetyParam2 @26 :UInt32;
-    fanStallCount @34 :UInt8;
   }
 }
 
