@@ -537,5 +537,3 @@ void WifiManager::changeTetheringPassword(const QString &newPassword) {
     }
   }
 }
-
-#include "moc_wifi_manager.cc"
