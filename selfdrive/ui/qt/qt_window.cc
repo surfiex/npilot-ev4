@@ -1,4 +1,5 @@
 #include "selfdrive/ui/qt/qt_window.h"
+#include <QDebug>
 
 void setMainWindow(QWidget *w) {
   const QSize sz = QGuiApplication::primaryScreen()->size();
