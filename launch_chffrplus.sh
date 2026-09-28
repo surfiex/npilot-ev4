@@ -79,9 +79,18 @@ function launch {
 
   python ./opendbc/car/hyundai/values.py > /data/params/d/SupportedCars
 
-  # ensure onnx, crcmod, and xattr are installed
-  for dep in onnx crcmod xattr; do
-    if ! python -c "import $dep" > /dev/null 2>&1; then
+  # submodule package symlinks for PYTHONPATH imports on device.
+  ln -sfn msgq_repo/msgq msgq
+  ln -sfn opendbc_repo/opendbc opendbc
+  ln -sfn rednose_repo/rednose rednose
+  ln -sfn teleoprtc_repo/teleoprtc teleoprtc
+  ln -sfn tinygrad_repo/tinygrad tinygrad
+
+  # ensure onnx, crcmod, xattr, and pyserial are installed
+  for dep in onnx crcmod xattr pyserial; do
+    mod=$dep
+    [ "$dep" = "pyserial" ] && mod="serial"
+    if ! python -c "import $mod" > /dev/null 2>&1; then
       echo "Installing missing $dep dependency..."
       pip install --no-cache-dir $dep || true
     fi
