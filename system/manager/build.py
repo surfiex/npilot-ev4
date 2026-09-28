@@ -92,3 +92,4 @@ if __name__ == "__main__":
   spinner.update_progress(0, 100)
   build_metadata = get_build_metadata()
   build(spinner, build_metadata.openpilot.is_dirty, minimal = AGNOS)
+  spinner.close()

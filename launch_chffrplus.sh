@@ -101,6 +101,7 @@ function launch {
   if [ ! -f $DIR/prebuilt ]; then
     ./build.py
   fi
+  pkill -9 -f spinner.py || true
   ./manager.py
 
   # if broken, keep on screen error
