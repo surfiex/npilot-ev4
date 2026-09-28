@@ -9,6 +9,7 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstdio>
+#include <dlfcn.h>
 
 #include <OMX_Component.h>
 #include <OMX_IndexExt.h>
@@ -307,9 +308,31 @@ static const char* omx_color_fomat_name(uint32_t format) {
 }
 
 
+typedef OMX_ERRORTYPE (*OMX_GetHandle_fn)(OMX_HANDLETYPE*, OMX_STRING, OMX_PTR, OMX_CALLBACKTYPE*);
+typedef OMX_ERRORTYPE (*OMX_FreeHandle_fn)(OMX_HANDLETYPE);
+
+static OMX_GetHandle_fn p_OMX_GetHandle = nullptr;
+static OMX_FreeHandle_fn p_OMX_FreeHandle = nullptr;
+static bool omx_init_attempted = false;
+static bool omx_available = false;
+
+static bool ensure_omx_loaded() {
+  if (!omx_init_attempted) {
+    omx_init_attempted = true;
+    void *lib = dlopen("libOmxCore.so", RTLD_NOW);
+    if (lib) {
+      p_OMX_GetHandle = (OMX_GetHandle_fn)dlsym(lib, "OMX_GetHandle");
+      p_OMX_FreeHandle = (OMX_FreeHandle_fn)dlsym(lib, "OMX_FreeHandle");
+      omx_available = (p_OMX_GetHandle != nullptr && p_OMX_FreeHandle != nullptr);
+    }
+  }
+  return omx_available;
+}
+
 // ***** encoder functions *****
 
 OmxEncoder::OmxEncoder(const char* path, int width, int height, int fps, int bitrate, bool h265, bool downscale) {
+  this->handle = nullptr;
   this->path = path;
   this->width = width;
   this->height = height;
@@ -323,10 +346,17 @@ OmxEncoder::OmxEncoder(const char* path, int width, int height, int fps, int bit
     this->v_ptr2 = (uint8_t *)malloc(this->width*this->height/4);
   }
 
+  if (!ensure_omx_loaded()) {
+    LOGW("libOmxCore.so not found; hardware screen recording is not supported on this platform");
+    return;
+  }
+
   auto component = (OMX_STRING)(h265 ? "OMX.qcom.video.encoder.hevc" : "OMX.qcom.video.encoder.avc");
-  int err = OMX_GetHandle(&this->handle, component, this, &omx_callbacks);
+  int err = p_OMX_GetHandle(&this->handle, component, this, &omx_callbacks);
   if (err != OMX_ErrorNone) {
     LOGE("error getting codec: %x", err);
+    this->handle = nullptr;
+    return;
   }
   assert(err == OMX_ErrorNone);
   // printf("handle: %p\n", this->handle);
@@ -548,7 +578,7 @@ void OmxEncoder::handle_out_buf(OmxEncoder *e, OMX_BUFFERHEADERTYPE *out_buf) {
 
 int OmxEncoder::encode_frame_rgba(const uint8_t *ptr, int in_width, int in_height, uint64_t ts) {
   int err;
-  if (!this->is_open) {
+  if (!this->handle || !this->is_open) {
     return -1;
   }
 
@@ -622,6 +652,9 @@ int OmxEncoder::encode_frame_rgba(const uint8_t *ptr, int in_width, int in_heigh
 }
 
 void OmxEncoder::encoder_open(const char* filename) {
+  if (!this->handle) {
+    return;
+  }
   int err;
 
   struct stat st = {0};
@@ -674,6 +707,10 @@ void OmxEncoder::encoder_open(const char* filename) {
 }
 
 void OmxEncoder::encoder_close() {
+  if (!this->handle) {
+    this->is_open = false;
+    return;
+  }
   if (this->is_open) {
     if (this->dirty) {
       // drain output only if there could be frames in the encoder
@@ -713,6 +750,20 @@ void OmxEncoder::encoder_close() {
 }
 
 OmxEncoder::~OmxEncoder() {
+  if (!this->handle) {
+    if (this->codec_config) {
+      free(this->codec_config);
+      this->codec_config = nullptr;
+    }
+    if (this->downscale) {
+      free(this->y_ptr2);
+      free(this->u_ptr2);
+      free(this->v_ptr2);
+      this->y_ptr2 = this->u_ptr2 = this->v_ptr2 = nullptr;
+    }
+    return;
+  }
+
   assert(!this->is_open);
 
   OMX_CHECK(OMX_SendCommand(this->handle, OMX_CommandStateSet, OMX_StateIdle, NULL));
@@ -731,7 +782,10 @@ OmxEncoder::~OmxEncoder() {
 
   wait_for_state(OMX_StateLoaded);
 
-  OMX_CHECK(OMX_FreeHandle(this->handle));
+  if (p_OMX_FreeHandle) {
+    OMX_CHECK(p_OMX_FreeHandle(this->handle));
+  }
+  this->handle = nullptr;
 
   OMX_BUFFERHEADERTYPE *out_buf;
   while (this->free_in.try_pop(out_buf));

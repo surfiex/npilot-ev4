@@ -19,6 +19,8 @@ public:
   OmxEncoder(const char* path, int width, int height, int fps, int bitrate, bool h265, bool downscale);
   ~OmxEncoder();
 
+  bool is_valid() const { return handle != nullptr; }
+
   int encode_frame_rgba(const uint8_t *ptr, int in_width, int in_height, uint64_t ts);
   void encoder_open(const char* filename);
   void encoder_close();
@@ -53,7 +55,7 @@ private:
   std::condition_variable state_cv;
   OMX_STATETYPE state = OMX_StateLoaded;
 
-  OMX_HANDLETYPE handle;
+  OMX_HANDLETYPE handle = nullptr;
 
   std::vector<OMX_BUFFERHEADERTYPE *> in_buf_headers;
   std::vector<OMX_BUFFERHEADERTYPE *> out_buf_headers;

@@ -50,6 +50,9 @@ ScreenRecoder::ScreenRecoder(QWidget *parent) : QPushButton(parent), image_queue
   rgb_buffer = std::make_unique<uint8_t[]>(src_width*src_height*4);
   rgb_scale_buffer = std::make_unique<uint8_t[]>(dst_width*dst_height*4);
   encoder = std::make_unique<OmxEncoder>(path.c_str(), dst_width, dst_height, UI_FREQ, 2*1024*1024, false, false);
+  if (!encoder->is_valid()) {
+    setVisible(false);
+  }
 }
 
 ScreenRecoder::~ScreenRecoder() {
@@ -107,7 +110,7 @@ void ScreenRecoder::toggle() {
 
 void ScreenRecoder::start() {
 
-  if(recording)
+  if(recording || !encoder || !encoder->is_valid())
     return;
 
   char filename[64];

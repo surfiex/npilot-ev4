@@ -38,7 +38,7 @@ qt_src = ["main.cc", "ui.cc", "qt/sidebar.cc", "qt/body.cc",
           "qt/ntune/ntunewidget.cc",
           ]
 
-qt_libs += ['OmxCore', 'gsl', 'CB', 'avformat', 'avcodec', 'swscale', 'avutil', 'yuv', 'pthread']
+qt_libs += ['avformat', 'avcodec', 'swscale', 'avutil', 'yuv', 'pthread', 'dl']
 
 # build translation files
 with open(File("translations/languages.json").abspath) as f:
