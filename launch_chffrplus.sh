@@ -79,6 +79,12 @@ function launch {
 
   python ./opendbc/car/hyundai/values.py > /data/params/d/SupportedCars
 
+  # ensure onnx is installed for tinygrad model compilation
+  if ! python -c "import onnx" > /dev/null 2>&1; then
+    echo "Installing missing onnx dependency..."
+    pip install --no-cache-dir onnx || true
+  fi
+
   # start manager
   cd system/manager
   if [ ! -f $DIR/prebuilt ]; then
