@@ -16,8 +16,11 @@ int main(int argc, char *argv[]) {
 
   QTranslator translator;
   QString translation_file = QString::fromStdString(Params().get("LanguageSetting"));
-  if (!translator.load(QString(":/%1").arg(translation_file)) && translation_file.length()) {
-    qCritical() << "Failed to load translation file:" << translation_file;
+  if (translation_file.length()) {
+    if (!translator.load(QString(":/%1").arg(translation_file)) &&
+        !translator.load(QString(":/main_%1").arg(translation_file))) {
+      qCritical() << "Failed to load translation file:" << translation_file;
+    }
   }
 
   QApplication a(argc, argv);

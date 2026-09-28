@@ -1,15 +1,20 @@
 #include "selfdrive/ui/qt/qt_window.h"
 
 void setMainWindow(QWidget *w) {
-  const float scale = util::getenv("SCALE", 1.0f);
   const QSize sz = QGuiApplication::primaryScreen()->size();
+  qInfo() << "Primary screen size:" << sz << "devicePixelRatio:" << QGuiApplication::primaryScreen()->devicePixelRatio();
 
-  if (Hardware::PC() && scale == 1.0 && !(sz - DEVICE_SCREEN_SIZE).isValid()) {
-    w->setMinimumSize(QSize(640, 480)); // allow resize smaller than fullscreen
-    w->setMaximumSize(DEVICE_SCREEN_SIZE);
-    w->resize(sz);
+  if (Hardware::MICI()) {
+    w->setFixedSize(DEVICE_SCREEN_SIZE);
   } else {
-    w->setFixedSize(DEVICE_SCREEN_SIZE * scale);
+    const float scale = util::getenv("SCALE", 1.0f);
+    if (Hardware::PC() && scale == 1.0 && !(sz - DEVICE_SCREEN_SIZE).isValid()) {
+      w->setMinimumSize(QSize(640, 480)); // allow resize smaller than fullscreen
+      w->setMaximumSize(DEVICE_SCREEN_SIZE);
+      w->resize(sz);
+    } else {
+      w->setFixedSize(DEVICE_SCREEN_SIZE * scale);
+    }
   }
   w->show();
 

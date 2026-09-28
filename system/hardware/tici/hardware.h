@@ -15,6 +15,7 @@ class HardwareTici : public HardwareNone {
 public:
   static bool TICI() { return true; }
   static bool AGNOS() { return true; }
+  static bool MICI() { return get_device_type() == cereal::InitData::DeviceType::MICI; }
   static std::string get_os_version() {
     return "AGNOS " + util::read_file("/VERSION");
   }

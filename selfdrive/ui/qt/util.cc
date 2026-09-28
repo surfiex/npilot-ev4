@@ -120,6 +120,16 @@ void initApp(int argc, char *argv[], bool disable_hidpi) {
   }
 #else
   app_dir = QFileInfo(util::readlink("/proc/self/exe").c_str()).path();
+  if (Hardware::MICI()) {
+    // Comma 4 screen is 536x240, scale down 2160x1080 Qt UI to fit (240/1080 = 0.2222)
+    float mici_scale = 240.0f / 1080.0f;
+    if (const char *env_scale = getenv("SCALE")) {
+      mici_scale = std::stof(env_scale);
+    }
+    qputenv("QT_SCALE_FACTOR", QByteArray::number(mici_scale, 'f', 4));
+  } else if (const char *env_scale = getenv("SCALE")) {
+    qputenv("QT_SCALE_FACTOR", QByteArray(env_scale));
+  }
 #endif
 
   qputenv("QT_DBL_CLICK_DIST", QByteArray::number(150));
