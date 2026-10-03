@@ -8,7 +8,7 @@ from openpilot.common.basedir import BASEDIR
 from openpilot.common.params import Params
 from openpilot.common.time_helpers import system_time_valid
 from openpilot.system.ui.widgets.scroller import NavRawScrollPanel, NavScroller
-from openpilot.selfdrive.ui.mici.widgets.button import BigButton, BigCircleButton
+from openpilot.selfdrive.ui.mici.widgets.button import BigButton, BigCircleButton, BigMultiParamToggle
 from openpilot.selfdrive.ui.mici.widgets.dialog import BigDialog, BigConfirmationDialog
 from openpilot.selfdrive.ui.mici.widgets.pairing_dialog import PairingDialog
 from openpilot.selfdrive.ui.mici.onroad.driver_camera_dialog import DriverCameraDialog
@@ -337,9 +337,25 @@ class DeviceLayoutMici(NavScroller):
     terms_btn = BigButton("terms &\nconditions", "", gui_app.texture("icons_mici/settings/device/info.png", 64, 64))
     terms_btn.set_click_callback(lambda: gui_app.push_widget(ReviewTermsPage()))
 
+    def on_display_mode_changed(val: str):
+      options = ["standard", "black screen", "black + external"]
+      idx = options.index(val) if val in options else 0
+      ui_state.params.put("MiciDisplayMode", idx)
+      ui_state.params.put("ClusterHud", 1 if idx == 2 else 0)
+      if hasattr(ui_state, "display_mode"):
+        ui_state.display_mode = idx
+
+    self._display_mode_toggle = BigMultiParamToggle(
+      "display mode",
+      "MiciDisplayMode",
+      ["standard", "black screen", "black + external"],
+      select_callback=on_display_mode_changed,
+    )
+
     self._scroller.add_widgets([
       DeviceInfoLayoutMici(),
       UpdateOpenpilotBigButton(),
+      self._display_mode_toggle,
       PairBigButton(),
       review_training_guide_btn,
       driver_cam_btn,
@@ -350,6 +366,10 @@ class DeviceLayoutMici(NavScroller):
       reboot_btn,
       self._power_off_btn,
     ])
+
+  def show_event(self):
+    super().show_event()
+    self._display_mode_toggle.refresh()
 
   def _on_regulatory(self):
     if not self._fcc_dialog:

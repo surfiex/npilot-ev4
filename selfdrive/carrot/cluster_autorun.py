@@ -83,7 +83,8 @@ def _is_usb_disconnect_error(exc: BaseException) -> bool:
 
 def _read_hud_mode(params: Params) -> int:
     try:
-        return int(params.get_int(HUD_PARAM))
+        val = params.get(HUD_PARAM) if hasattr(params, "get") else params.get_int(HUD_PARAM)
+        return int(val) if val is not None else 0
     except Exception as exc:
         print(f"[cluster_autorun] failed to read {HUD_PARAM}: {exc}", flush=True)
         return 0
@@ -91,7 +92,8 @@ def _read_hud_mode(params: Params) -> int:
 
 def _read_hud_debug_mode(params: Params) -> int:
     try:
-        return int(params.get_int(HUD_DEBUG_PARAM))
+        val = params.get(HUD_DEBUG_PARAM) if hasattr(params, "get") else params.get_int(HUD_DEBUG_PARAM)
+        return int(val) if val is not None else 0
     except Exception as exc:
         print(f"[cluster_autorun] failed to read {HUD_DEBUG_PARAM}: {exc}", flush=True)
         return 0
@@ -111,7 +113,8 @@ def _hud_output_allowed(params: Params) -> bool:
 
 def _read_encoder_mode(params: Params) -> int:
     try:
-        encoder_mode = int(params.get_int(HUD_ENCODER_PARAM))
+        val = params.get(HUD_ENCODER_PARAM) if hasattr(params, "get") else params.get_int(HUD_ENCODER_PARAM)
+        encoder_mode = int(val) if val is not None else ENCODER_AUTO
     except Exception as exc:
         print(f"[cluster_autorun] failed to read {HUD_ENCODER_PARAM}: {exc}", flush=True)
         return ENCODER_AUTO
@@ -126,7 +129,8 @@ def _read_encoder_mode(params: Params) -> int:
 
 def _read_orientation(params: Params) -> int | None:
     try:
-        orientation = int(params.get_int(HUD_ORIENTATION_PARAM))
+        val = params.get(HUD_ORIENTATION_PARAM) if hasattr(params, "get") else params.get_int(HUD_ORIENTATION_PARAM)
+        orientation = int(val) if val is not None else 0
     except Exception as exc:
         print(f"[cluster_autorun] failed to read {HUD_ORIENTATION_PARAM}: {exc}", flush=True)
         return None

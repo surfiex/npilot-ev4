@@ -185,6 +185,21 @@ class AugmentedRoadView(CameraView):
       self._offroad_label.render(self._rect)
       return
 
+    # Check display mode (0: standard, 1: black screen, 2: black + external)
+    display_mode = getattr(ui_state, "display_mode", 0)
+    if display_mode in (1, 2):
+      rl.draw_rectangle_rec(self.rect, rl.BLACK)
+      alert_to_render, _ = self._alert_renderer.will_render()
+      if alert_to_render is not None:
+        content_rect = rl.Rectangle(
+          self.rect.x,
+          self.rect.y,
+          self.rect.width - SIDE_PANEL_WIDTH,
+          self.rect.height,
+        )
+        self._alert_renderer.render(content_rect)
+      return
+
     self._switch_stream_if_needed(ui_state.sm)
 
     # Update calibration before rendering

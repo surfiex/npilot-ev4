@@ -137,6 +137,18 @@ cdef class Params:
       r = self.p.getBool(k, block)
     return r
 
+  def get_int(self, key, bool block=False):
+    val = self.get(key, block=block)
+    if val is None:
+      return 0
+    try:
+      return int(val)
+    except Exception:
+      return 0
+
+  def put_int(self, key, int val):
+    self.put(key, val)
+
   def _put_cast(self, key, dat):
     cdef string k = self.check_key(key)
     cdef ParamKeyType t = self.p.getKeyType(k)

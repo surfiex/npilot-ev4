@@ -14,6 +14,22 @@ class TogglesLayoutMici(NavScroller):
     super().__init__()
 
     self._personality_toggle = BigMultiParamToggle("driving personality", "LongitudinalPersonality", ["aggressive", "standard", "relaxed"])
+
+    def on_display_mode_changed(val: str):
+      options = ["standard", "black screen", "black + external"]
+      idx = options.index(val) if val in options else 0
+      ui_state.params.put("MiciDisplayMode", idx)
+      ui_state.params.put("ClusterHud", 1 if idx == 2 else 0)
+      if hasattr(ui_state, "display_mode"):
+        ui_state.display_mode = idx
+
+    self._display_mode_toggle = BigMultiParamToggle(
+      "display mode",
+      "MiciDisplayMode",
+      ["standard", "black screen", "black + external"],
+      select_callback=on_display_mode_changed,
+    )
+
     self._experimental_btn = BigParamControl("experimental mode", "ExperimentalMode")
     is_metric_toggle = BigParamControl("use metric units", "IsMetric")
     ldw_toggle = BigParamControl("lane departure warnings", "IsLdwEnabled")
@@ -24,6 +40,7 @@ class TogglesLayoutMici(NavScroller):
 
     self._scroller.add_widgets([
       self._personality_toggle,
+      self._display_mode_toggle,
       self._experimental_btn,
       is_metric_toggle,
       ldw_toggle,
@@ -83,5 +100,6 @@ class TogglesLayoutMici(NavScroller):
         ui_state.params.remove("ExperimentalMode")
 
     # Refresh toggles from params to mirror external changes
+    self._display_mode_toggle.refresh()
     for key, item in self._refresh_toggles:
       item.set_checked(ui_state.params.get_bool(key))

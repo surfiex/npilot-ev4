@@ -80,7 +80,10 @@ def enable_mici_ui(started: bool, params: Params, CP: car.CarParams) -> bool:
 
 def cluster_hud_active(params: Params) -> bool:
   try:
-    return params.get_bool("ClusterHud") or params.get_int("ClusterHud") == 1
+    val = params.get("ClusterHud")
+    if val in (1, "1", b"1", True):
+      return True
+    return bool(params.get_bool("ClusterHud"))
   except Exception:
     return False
 

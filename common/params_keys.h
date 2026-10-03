@@ -143,6 +143,7 @@ inline static std::unordered_map<std::string, ParamKeyAttributes> keys = {
     {"ClusterHud", {PERSISTENT, INT, "0"}},
     {"ClusterHudMode", {PERSISTENT, INT, "0"}},
     {"ClusterHudConnected", {CLEAR_ON_MANAGER_START, BOOL}},
+    {"MiciDisplayMode", {PERSISTENT, INT, "0"}},
     {"SccOnBus2", {PERSISTENT, BOOL}},
     {"CruiseStateControl", {PERSISTENT, BOOL}},
     {"SccGapAdjust", {PERSISTENT, STRING}},

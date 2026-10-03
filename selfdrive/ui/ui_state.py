@@ -69,6 +69,7 @@ class UIState:
     self.panda_type: log.PandaState.PandaType = log.PandaState.PandaType.unknown
     self.personality: log.LongitudinalPersonality = log.LongitudinalPersonality.standard
     self.light_sensor: float = -1.0
+    self.display_mode: int = 0
 
     self._update_params()
 
@@ -86,6 +87,8 @@ class UIState:
     self.sm.update(0)
     self._update_state()
     self._update_status()
+    if self.sm.frame % (2 * int(rl.get_fps() or 20)) == 0:
+      self._update_params()
     device.update()
 
   def _update_state(self) -> None:
@@ -142,6 +145,15 @@ class UIState:
       self.is_metric = self.params.get_bool("IsMetric")
     except UnknownKeyName:
       self.is_metric = False
+
+    try:
+      val = self.params.get("MiciDisplayMode")
+      self.display_mode = int(val) if val is not None else 0
+    except Exception:
+      self.display_mode = 0
+
+  def update_params(self) -> None:
+    self._update_params()
 
 
 class Device:
