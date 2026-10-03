@@ -61,6 +61,26 @@ def or_(*fns):
 def and_(*fns):
   return lambda *args: operator.and_(*(fn(*args) for fn in fns))
 
+def is_mici_hardware() -> bool:
+  return HARDWARE.get_device_type() == "mici"
+
+def enable_qt_ui(started: bool, params: Params, CP: car.CarParams) -> bool:
+  mode = params.get("UiMode")
+  if mode == b"1":
+    return True
+  if mode == b"2":
+    return False
+  return not is_mici_hardware()
+
+def enable_mici_ui(started: bool, params: Params, CP: car.CarParams) -> bool:
+  mode = params.get("UiMode")
+  if mode == b"1" or mode == b"2":
+    return False
+  return is_mici_hardware()
+
+def enable_cluster_hud(started: bool, params: Params, CP: car.CarParams) -> bool:
+  return True
+
 procs = [
   DaemonProcess("manage_athenad", "system.athena.manage_athenad", "AthenadPid"),
 
@@ -80,8 +100,9 @@ procs = [
   PythonProcess("dmonitoringmodeld", "selfdrive.modeld.dmonitoringmodeld", driverview, enabled=(WEBCAM or not PC)),
 
   PythonProcess("sensord", "system.sensord.sensord", only_onroad, enabled=not PC),
-  NativeProcess("ui", "selfdrive/ui", ["./ui"], always_run, watchdog_max_dt=(5 if not PC else None)),
-  PythonProcess("raylib_ui", "selfdrive.ui.ui", always_run, enabled=False, watchdog_max_dt=(5 if not PC else None)),
+  NativeProcess("ui", "selfdrive/ui", ["./ui"], enable_qt_ui, watchdog_max_dt=(5 if not PC else None)),
+  PythonProcess("raylib_ui", "selfdrive.ui.ui", enable_mici_ui, watchdog_max_dt=(5 if not PC else None)),
+  PythonProcess("carrot_cluster", "selfdrive.carrot.cluster_autorun", enable_cluster_hud, restart_if_crash=True),
   PythonProcess("soundd", "selfdrive.ui.soundd", only_onroad),
   PythonProcess("locationd", "selfdrive.locationd.locationd", only_onroad),
   NativeProcess("_pandad", "selfdrive/pandad", ["./pandad"], always_run, enabled=False),

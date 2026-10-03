@@ -8,6 +8,9 @@ void setMainWindow(QWidget *w) {
     w->setMinimumSize(QSize(640, 480)); // allow resize smaller than fullscreen
     w->setMaximumSize(DEVICE_SCREEN_SIZE);
     w->resize(sz);
+  } else if (Hardware::MICI()) {
+    const QSize mici_size = sz.isValid() ? sz : QSize(536, 240);
+    w->setFixedSize(mici_size);
   } else {
     w->setFixedSize(DEVICE_SCREEN_SIZE * scale);
   }
