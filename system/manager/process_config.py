@@ -78,8 +78,14 @@ def enable_mici_ui(started: bool, params: Params, CP: car.CarParams) -> bool:
     return False
   return is_mici_hardware()
 
+def cluster_hud_active(params: Params) -> bool:
+  try:
+    return params.get_bool("ClusterHud") or params.get_int("ClusterHud") == 1
+  except Exception:
+    return False
+
 def enable_cluster_hud(started: bool, params: Params, CP: car.CarParams) -> bool:
-  return True
+  return cluster_hud_active(params)
 
 procs = [
   DaemonProcess("manage_athenad", "system.athena.manage_athenad", "AthenadPid"),
