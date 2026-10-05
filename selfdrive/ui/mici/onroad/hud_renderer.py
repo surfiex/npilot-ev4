@@ -185,9 +185,10 @@ class HudRenderer(Widget):
     # 1. Lead car distance & rel speed (top-right)
     if 'radarState' in sm.recv_frame and sm.recv_frame['radarState'] > 0:
       radar_state = sm['radarState']
-      if radar_state.leadOne.status:
-        lead_d = radar_state.leadOne.dRel
-        lead_v = radar_state.leadOne.vRel * (CV.MS_TO_KPH if ui_state.is_metric else CV.MS_TO_MPH)
+      lead_one = radar_state.leadOne
+      if getattr(lead_one, 'present', getattr(lead_one, 'status', False)):
+        lead_d = lead_one.dRel
+        lead_v = lead_one.vRel * (CV.MS_TO_KPH if ui_state.is_metric else CV.MS_TO_MPH)
         lead_str = f"{lead_d:.1f}m"
         lead_v_str = f"{lead_v:+.0f}"
         rl.draw_text_ex(self._font_bold, lead_str, rl.Vector2(rect.x + rect.width - 95, rect.y + 12), 26, 0, rl.Color(160, 255, 160, 230))
