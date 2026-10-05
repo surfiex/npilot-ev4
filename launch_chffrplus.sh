@@ -17,7 +17,7 @@ function agnos_init {
   sudo chmod 660 /dev/adsprpc-smd /dev/ion /dev/kgsl-3d0
 
   # Check if AGNOS update is required
-  if [ $(< /VERSION) != "$AGNOS_VERSION" ]; then
+  if [ -z "$SKIP_AGNOS_CHECK" ] && [ $(< /VERSION) != "$AGNOS_VERSION" ]; then
     AGNOS_PY="$DIR/system/hardware/tici/agnos.py"
     MANIFEST="$DIR/system/hardware/tici/agnos.json"
     if $AGNOS_PY --verify $MANIFEST; then
