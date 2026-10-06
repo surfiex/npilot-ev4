@@ -9,13 +9,26 @@ from openpilot.system.ui.text import wrap_text
 from openpilot.system.ui.widgets import Widget
 
 # Constants
-PROGRESS_BAR_WIDTH = 1000
-PROGRESS_BAR_HEIGHT = 20
+if gui_app.big_ui():
+  PROGRESS_BAR_WIDTH = 1000
+  PROGRESS_BAR_HEIGHT = 20
+  TEXTURE_SIZE = 360
+  WRAPPED_SPACING = 50
+  CENTERED_SPACING = 150
+  FONT_SIZE = 96
+  LINE_HEIGHT = 104
+  MARGIN_H = 100
+else:
+  PROGRESS_BAR_WIDTH = 268
+  PROGRESS_BAR_HEIGHT = 10
+  TEXTURE_SIZE = 140
+  WRAPPED_SPACING = 10
+  CENTERED_SPACING = 20
+  FONT_SIZE = 36
+  LINE_HEIGHT = 40
+  MARGIN_H = 30
+
 DEGREES_PER_SECOND = 360.0  # one full rotation per second
-MARGIN_H = 100
-TEXTURE_SIZE = 360
-FONT_SIZE = 96
-LINE_HEIGHT = 104
 DARKGRAY = (55, 55, 55, 255)
 
 
@@ -43,12 +56,12 @@ class Spinner(Widget):
   def _render(self, rect: rl.Rectangle):
     if self._wrapped_lines:
       # Calculate total height required for spinner and text
-      spacing = 50
+      spacing = WRAPPED_SPACING
       total_height = TEXTURE_SIZE + spacing + len(self._wrapped_lines) * LINE_HEIGHT
       center_y = (rect.height - total_height) / 2.0 + TEXTURE_SIZE / 2.0
     else:
       # Center spinner vertically
-      spacing = 150
+      spacing = CENTERED_SPACING
       center_y = rect.height / 2.0
     y_pos = center_y + TEXTURE_SIZE / 2.0 + spacing
 
